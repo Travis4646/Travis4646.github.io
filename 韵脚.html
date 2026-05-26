@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>韵脚</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --text: #1d1d1f;
+      --secondary: #86868b;
+      --tertiary: #aeaeb2;
+      --separator: rgba(0, 0, 0, 0.08);
+      --accent: #0071e3;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro SC", "PingFang SC", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.47;
+    }
+    .app {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 48px 22px 64px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 15px;
+      color: var(--secondary);
+      margin-bottom: 36px;
+    }
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 680px) {
+      .columns { grid-template-columns: 1fr; }
+      .app { padding-top: 32px; }
+    }
+    .col {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .col-head {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+    }
+    input {
+      width: 100%;
+      border: none;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 17px;
+      color: var(--text);
+      outline: none;
+      transition: box-shadow 0.2s;
+    }
+    input::placeholder { color: var(--tertiary); }
+    input:focus {
+      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.2);
+      background: #fff;
+    }
+    .opts {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--secondary);
+    }
+    .opts input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+      accent-color: var(--accent);
+      box-shadow: none;
+    }
+    .results {
+      margin-top: 20px;
+      min-height: 120px;
+    }
+    .hint {
+      font-size: 15px;
+      color: var(--tertiary);
+      padding: 24px 0;
+      text-align: center;
+    }
+    .err { color: #ff3b30; font-size: 15px; padding: 16px 0; text-align: center; }
+
+  /* 中文：逐字押韵 */
+    .char-block {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--separator);
+    }
+    .char-block:last-child { border-bottom: none; padding-bottom: 0; }
+    .char-block:first-child { padding-top: 0; }
+    .char-head {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .char-big {
+      font-size: 22px;
+      font-weight: 600;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .char-meta {
+      font-size: 13px;
+      color: var(--secondary);
+    }
+    .char-meta em {
+      font-style: normal;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-left: 42px;
+    }
+    .chip {
+      font-size: 15px;
+      padding: 5px 11px;
+      background: var(--bg);
+      border-radius: 8px;
+      color: var(--text);
+    }
+    .chip small {
+      margin-left: 4px;
+      font-size: 11px;
+      color: var(--tertiary);
+    }
+    .no-rhyme {
+      padding-left: 42px;
+      font-size: 13px;
+      color: var(--tertiary);
+    }
+
+  /* 英文 */
+    .en-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .en-chips .chip { font-size: 15px; }
+    .foot {
+      margin-top: 40px;
+      font-size: 12px;
+      color: var(--tertiary);
+      text-align: center;
+      line-height: 1.8;
+    }
+    .foot a { color: var(--secondary); text-decoration: none; }
+    .foot a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>韵脚</h1>
+    <p class="subtitle">输入词语，逐字给出押韵词语</p>
+
+    <div class="columns">
+      <section class="col">
+        <div class="col-head">中文</div>
+        <input type="text" id="zh-input" placeholder="例如：梦想、夜路" maxlength="16" autocomplete="off" spellcheck="false">
+        <label class="opts">
+          <input type="checkbox" id="zh-tone">
+          同调
+        </label>
+        <div class="results" id="zh-results">
+          <p class="hint">输入词语，自动逐字匹配押韵词</p>
+        </div>
+      </section>
+
+      <section class="col">
+        <div class="col-head">English</div>
+        <input type="text" id="en-input" placeholder="flow" maxlength="40" autocomplete="off" spellcheck="false">
+        <div class="results" id="en-results">
+          <p class="hint">输入单词查押韵</p>
+        </div>
+      </section>
+    </div>
+
+    <p class="foot">
+      拼音 <a href="https://github.com/zh-lx/pinyin-pro" target="_blank" rel="noopener">pinyin-pro</a>
+      · 词库本站韵母词语表
+      · 英文 <a href="https://www.datamuse.com/api/" target="_blank" rel="noopener">Datamuse</a>
+    </p>
+  </div>
+
+  <script src="https://unpkg.com/pinyin-pro@3.26.0/dist/index.js"></script>
+  <script>
+    const { pinyin } = window.pinyinPro;
+    const INITIALS = ["zh","ch","sh","b","p","m","f","d","t","n","l","g","k","h","j","q","x","r","z","c","s","y","w"];
+
+    function getYunmu(py) {
+      if (!py) return "";
+      let s = py.toLowerCase().replace(/[1-5]/g, "");
+      for (const ini of INITIALS) {
+        if (s.startsWith(ini)) { s = s.slice(ini.length); break; }
+      }
+      return s || py;
+    }
+    function getTone(py) {
+      const m = String(py).match(/[1-5]/);
+      return m ? m[0] : "5";
+    }
+    function normalizeFinal(y) {
+      const map = { ui: "uei", un: "uen", iu: "iou" };
+      return map[y] || y;
+    }
+
+    /* 词语词库：按尾字韵母分类（双押常用） */
+    const WORD_DB = {
+      a: ["回家","开花","说话","当下","夏天","文化","画家","大家","头发","眼花","潇洒","西瓜","喇叭","打架","害怕","伟大","潇洒","潇洒"],
+      ai: ["回来","离开","开怀","明白","摇摆","帅气","变坏","加快","带来","大海","舞台","人才","发财","彩排","再次","现在","青菜","精彩","理睬","记载"],
+      an: ["安全","看见","满意","困难","上班","站台","高山","天空","边缘","前面","金钱","线条","场面","点头","店面","电话","变化","遍布","片面","偏向","篇章"],
+      ang: ["阳光","月光","灯光","疯狂","明朗","上当","商场","方丈","现场","不让","合唱","响亮","漂亮","力量","加强","墙上","枪响","翱翔","详细","吉祥","向往","巷子","项目","象征","相片","相信","香水","家乡","箱子","伤心","商量","掌声","涨价"],
+      ao: ["好吃","跑步","早上","脑袋","吵闹","少年","微笑","跳舞","叫喊","照片","找到","招聘","朝廷","潮流","巢穴","吵架","炒菜","超级","操纵"],
+      e: ["为了","热闹","快乐","颜色","车子","或者","这个","看着","哲学","车辙"],
+      ei: ["北方","被子","加倍","背景","备份","辈分","悲伤","杯子","碑刻","卑微"],
+      en: ["人民","门口","分析","身体","深刻","真正","神话","根据","跟踪","恩情"],
+      eng: ["风车","人生","天生","风声","城市","真诚","过程","可能","生成","声音","成长","层次","更加","寒冷","等待","灯光","登记"],
+      i: ["你们","里面","起来","地方","气球","机会","西瓜","希望","休息","学习","集合","着急","级别","击打","积累","基础","痕迹","季节","计划","记录"],
+      ian: ["见面","场面","点头","变化","天空","边缘","前面","金钱","线条","店面","电话","练习","恋爱","链条","脸面","连续","联合","莲花"],
+      iang: ["理想","想象","尽量","枪响","头上","上网","合唱","响亮","漂亮","力量","加强","墙上","枪响","翱翔","详细","吉祥","向往","巷子","项目","象征","相片","相信","香水","家乡","箱子"],
+      iao: ["小心","微笑","跳舞","叫喊","照片","找到","招聘","朝廷","潮流","鸟巢","奇妙","寺庙","描写","苗条"],
+      ie: ["别人","写字","谢谢","夜晚","世界","借鉴","解决","姐姐","节日","杰出","洁净","捷径"],
+      in: ["心情","新年","金子","今天","音乐","因为","阴天","引导","印刷","饮酒","隐藏"],
+      ing: ["行动","星星","醒来","性格","命运","确定","听见","停止","庭院","亭台","挺立"],
+      iong: ["使用","勇敢","涌动","踊跳","咏叹","游泳","拥抱","雍容"],
+      iu: ["流水","留下","六月","九月","酒水","久远","旧物","救人","就业"],
+      o: ["我们","过去","火车","多少","说话","做事","坐下","错误","落下","摸索","波浪","博士"],
+      ou: ["走路","手指","口水","头脑","够用","狗狗","钩子","沟通","构造","购买"],
+      u: ["不要","出现","路口","住宿","数学","书本","树木","输入","熟练","属于","束缚","叙述","技术"],
+      ua: ["花生","话语","画家","华人","化学","滑动","哗然"],
+      uai: ["奇怪","快乐","块头","筷子"],
+      uan: ["管理","关心","观看","官员","冠军","馆员","习惯","灌溉"],
+      uang: ["光明","疯狂","忙碌","方向","长城","场上","黄色","皇帝","慌张","荒凉"],
+      ui: ["会议","回来","对面","队伍","堆砌","推动","腿脚","退步"],
+      un: ["文化","问题","温暖","闻名","吻别","稳定"],
+      uo: ["过去","火车","多少","说话","做事","坐下","错误","落下","螺丝"],
+      v: ["女子","去年","取得","区域","曲子","趣味","驱使","躯体"],
+      ve: ["学习","雪花","血液","穴位","靴子"],
+      vn: ["群体","裙子"],
+      veng: ["穷困","琼浆","穹顶"],
+      ong: ["中国","同样","空气","梦想","风车","人生","红色","轰动","彩虹","洪水","宏伟","鸿毛"],
+      ia: ["家庭","加油","假如","价格","架势","驾驶","嫁娶","庄稼"],
+      uei: ["会议","回来","对面","队伍","堆砌","推动","腿脚","退步"],
+      uen: ["文化","问题","温暖","闻名","吻别","稳定"],
+      iou: ["流水","留下","六月","九月","酒水","久远","旧物","救人"],
+      ue: ["学习","雪花","血液","穴位","靴子"],
+      uang: ["光明","疯狂","忙碌","方向","长城","场上","黄色","皇帝","慌张","荒凉"]
+    };
+
+    const WORD_SLANG = {
+      ang: ["硬核","上场","开杠","放浪","张扬","盲闯","锵锵"],
+      ing: ["顶流","定型","听命","清醒","宿命","并行"],
+      ai: ["摆拍","开挂","坏菜","海带","再来"],
+      iao: ["开飙","微妙","庙堂","鸟巢"],
+      ian: ["前线","变脸","见面","练线"],
+      ie: ["写夜","别界","借解"],
+      ong: ["冲冲","轰鸣","红龙","中空"],
+      eng: ["成风","成城","声生","冷冷"],
+      iang: ["想亮","强墙","香箱","想象"],
+      an: ["难看","班站","天边","钱线"]
+    };
+
+    function analyzeChar(char) {
+      const py = (pinyin(char, { toneType: "num", type: "array" })[0]) || "";
+      return {
+        char,
+        yunmu: getYunmu(py),
+        tone: getTone(py),
+        displayPy: pinyin(char, { toneType: "symbol" })
+      };
+    }
+
+    function lastCharInfo(word) {
+      const last = [...word].pop();
+      const py = (pinyin(last, { toneType: "num", type: "array" })[0]) || "";
+      return { char: last, yunmu: getYunmu(py), tone: getTone(py) };
+    }
+
+    function wordRhymes(info, strictTone, fullInput, limit = 12) {
+      const key = normalizeFinal(info.yunmu) || info.yunmu;
+      const pool = new Set();
+      for (const k of [key, info.yunmu]) {
+        (WORD_DB[k] || []).forEach(w => pool.add(w));
+        (WORD_SLANG[k] || []).forEach(w => pool.add(w));
+      }
+      const out = [];
+      for (const w of pool) {
+        if (w.length < 2) continue;
+        if (w === fullInput || w.includes(fullInput) && fullInput.length > 1) continue;
+        if (w === info.char) continue;
+        const tail = lastCharInfo(w);
+        if (tail.yunmu !== info.yunmu && normalizeFinal(tail.yunmu) !== normalizeFinal(info.yunmu)) continue;
+        if (strictTone && tail.tone !== info.tone) continue;
+        out.push({ word: w, py: pinyin(w, { toneType: "symbol" }) });
+      }
+      return out.slice(0, limit);
+    }
+
+    function getHanChars(text) {
+      return [...text.trim()].filter(c => /\p{Script=Han}/u.test(c));
+    }
+
+    function renderZh() {
+      const el = document.getElementById("zh-results");
+      const raw = document.getElementById("zh-input").value.trim();
+      const chars = getHanChars(raw);
+      const strict = document.getElementById("zh-tone").checked;
+
+      if (!chars.length) {
+        el.innerHTML = '<p class="hint">输入词语，自动逐字匹配押韵词</p>';
+        return;
+      }
+
+      el.innerHTML = chars.map(ch => {
+        const info = analyzeChar(ch);
+        const list = wordRhymes(info, strict, raw);
+        const head = `
+          <div class="char-head">
+            <span class="char-big">${ch}</span>
+            <span class="char-meta"><em>${info.displayPy}</em> · 韵母 ${info.yunmu} · 押韵词</span>
+          </div>`;
+        if (!list.length) {
+          return `<div class="char-block">${head}<p class="no-rhyme">暂无同韵词语</p></div>`;
+        }
+        const chips = list.map(r =>
+          `<span class="chip">${r.word}<small>${r.py}</small></span>`
+        ).join("");
+        return `<div class="char-block">${head}<div class="chips">${chips}</div></div>`;
+      }).join("");
+    }
+
+    let enTimer;
+    async function searchEn(word) {
+      const q = word.trim().toLowerCase().replace(/[^a-z'-]/g, "");
+      if (!q) return null;
+      const [perfect, near] = await Promise.all([
+        fetch(`https://api.datamuse.com/words?rel_rhy=${encodeURIComponent(q)}&max=30`).then(r => r.json()),
+        fetch(`https://api.datamuse.com/words?rel_nry=${encodeURIComponent(q)}&max=15`).then(r => r.json())
+      ]);
+      const seen = new Set([q]);
+      const out = [];
+      for (const item of [...perfect, ...near]) {
+        if (seen.has(item.word)) continue;
+        seen.add(item.word);
+        out.push(item.word);
+      }
+      return { query: q, words: out.slice(0, 36) };
+    }
+
+    function renderEn(data) {
+      const el = document.getElementById("en-results");
+      if (!data) {
+        el.innerHTML = '<p class="hint">输入单词查押韵</p>';
+        return;
+      }
+      if (!data.words.length) {
+        el.innerHTML = '<p class="hint">未找到押韵词</p>';
+        return;
+      }
+      el.innerHTML = `<div class="en-chips">${data.words.map(w =>
+        `<span class="chip">${w}</span>`
+      ).join("")}</div>`;
+    }
+
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), ms);
+      };
+    }
+
+    const onZhInput = debounce(renderZh, 180);
+    const onEnInput = debounce(async () => {
+      const el = document.getElementById("en-results");
+      const val = document.getElementById("en-input").value;
+      if (!val.trim()) { renderEn(null); return; }
+      el.innerHTML = '<p class="hint">…</p>';
+      try {
+        renderEn(await searchEn(val));
+      } catch {
+        el.innerHTML = '<p class="err">网络不可用</p>';
+      }
+    }, 400);
+
+    document.getElementById("zh-input").addEventListener("input", onZhInput);
+    document.getElementById("zh-tone").addEventListener("change", renderZh);
+    document.getElementById("en-input").addEventListener("input", onEnInput);
+
+    document.getElementById("zh-input").value = "梦想";
+    renderZh();
+  </script>
+</body>
+</html>
